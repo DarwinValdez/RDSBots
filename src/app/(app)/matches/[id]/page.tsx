@@ -7,7 +7,7 @@ import type { PricedSelection } from "@/lib/model/engine";
 import { analyzeMatch, type FormLine, type TeamFeatures } from "@/lib/services/matchAnalysis";
 import { getSettings } from "@/lib/services/settings";
 import { SPORTS } from "@/lib/sports";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +16,7 @@ type Backtest = { matchesEvaluated: number; model: { brier: number; logLoss: num
 export default async function MatchPage({ params }: { params: Promise<{ id: string }> }) {
   const id = Number((await params).id);
   if (!Number.isInteger(id) || id <= 0) notFound();
-  const db = await createClient();
+  const db = createAdminClient();
   const settings = await getSettings();
   const a = await analyzeMatch(db, id, settings);
   if (!a) notFound();

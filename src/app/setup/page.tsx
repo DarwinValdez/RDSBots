@@ -4,8 +4,8 @@ import { providerStatus } from "@/lib/env";
 export const dynamic = "force-dynamic";
 
 const ITEMS = [
-  ["supabase", "Supabase (URL + anon key)", "NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY"],
-  ["supabaseService", "Supabase service role (jobs y admin)", "SUPABASE_SERVICE_ROLE_KEY"],
+  ["supabase", "Supabase URL", "NEXT_PUBLIC_SUPABASE_URL"],
+  ["supabaseService", "Supabase service role (acceso a datos, solo servidor)", "SUPABASE_SERVICE_ROLE_KEY"],
   ["apiSports", "API-Sports (fútbol, NBA, MLB, NFL, NHL)", "API_SPORTS_KEY"],
   ["oddsApi", "The Odds API (cuotas)", "ODDS_API_KEY"],
   ["anthropic", "Claude API (análisis y chat)", "ANTHROPIC_API_KEY"],

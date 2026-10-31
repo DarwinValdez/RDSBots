@@ -1,13 +1,13 @@
 import { LeagueRowEditor, NewLeagueForm, SportToggle } from "@/components/admin/client";
 import { Card, PageHeader } from "@/components/ui";
 import { requireAdminPage } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
 export default async function LeaguesPage() {
   await requireAdminPage();
-  const db = await createClient();
+  const db = createAdminClient();
   const [{ data: sports }, { data: leagues }] = await Promise.all([
     db.from("sports").select("key, name, enabled").order("sort_order"),
     db.from("leagues").select("*").order("sport_key").order("name"),

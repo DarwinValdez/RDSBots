@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/ui";
 import { betLabel } from "@/lib/model/markets";
 import { getSettings } from "@/lib/services/settings";
 import { priceUpcoming } from "@/lib/services/valueBets";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const metadata = { title: "Constructor de parlays" };
 export const dynamic = "force-dynamic";
@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 export default async function ParlayPage() {
   const settings = await getSettings();
   if (!settings.modules.parlays) return <ModuleDisabled name="Parlays" />;
-  const db = await createClient();
+  const db = createAdminClient();
   const priced = await priceUpcoming(db, settings, { to: new Date(Date.now() + 4 * 86_400_000) });
   const options: ParlayOption[] = priced.flatMap((p) =>
     p.selections

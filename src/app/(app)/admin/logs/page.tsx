@@ -1,13 +1,13 @@
 import { Card, DataUnavailable, PageHeader, Table, td, th } from "@/components/ui";
 import { requireAdminPage } from "@/lib/auth";
 import { dateTime } from "@/lib/format";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
 export default async function LogsPage() {
   await requireAdminPage();
-  const db = await createClient();
+  const db = createAdminClient();
   const [{ data: errors }, { data: activity }] = await Promise.all([
     db.from("error_logs").select("id, source, message, context, created_at").order("created_at", { ascending: false }).limit(100),
     db.from("activity_logs").select("id, user_id, action, details, ip, created_at").order("created_at", { ascending: false }).limit(100),

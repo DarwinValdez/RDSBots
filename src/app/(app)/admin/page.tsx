@@ -4,7 +4,7 @@ import { Badge, Card, DataUnavailable, PageHeader, Table, td, th } from "@/compo
 import { providerStatus } from "@/lib/env";
 import { dateTime } from "@/lib/format";
 import { requireAdminPage } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { fetchAll } from "@/lib/services/modelRuns";
 
 export const metadata = { title: "Administración" };
@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
   await requireAdminPage();
-  const db = await createClient();
+  const db = createAdminClient();
   const status = providerStatus();
   const since = new Date(Date.now() - 7 * 86_400_000).toISOString();
   const [usage, { data: jobs }, { count: users }, { count: matches }, { count: predictions }] = await Promise.all([

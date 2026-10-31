@@ -12,7 +12,7 @@ import { betLabel } from "@/lib/model/markets";
 import { loadPredictions, summarize } from "@/lib/services/performance";
 import { getSettings } from "@/lib/services/settings";
 import { extractValueBets, priceUpcoming } from "@/lib/services/valueBets";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const metadata = { title: "Dashboard" };
 export const dynamic = "force-dynamic";
@@ -21,7 +21,7 @@ type SP = Promise<Record<string, string | string[] | undefined>>;
 
 export default async function DashboardPage({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams;
-  const db = await createClient();
+  const db = createAdminClient();
   const settings = await getSettings();
   const sport = parseSport(sp.sport);
   const leagueId = parseId(sp.league);

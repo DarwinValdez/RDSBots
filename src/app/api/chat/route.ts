@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { assertUser, HttpError } from "@/lib/auth";
+import { HttpError } from "@/lib/auth";
 import { handler } from "@/lib/api";
 import { chat } from "@/lib/ai/chat";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -20,12 +20,12 @@ const body = z.object({
 });
 
 export const POST = handler("api:chat", async (req: Request) => {
-  const user = await assertUser();
   const settings = await getSettings();
   if (!settings.modules.chat) throw new HttpError(403, "El chat está desactivado");
-  await enforceRateLimit(`chat:${user.id}`, 40, 3600);
+  const ip = clientIp(req) ?? "unknown";
+  await enforceRateLimit(`chat:${ip}`, 40, 3600);
   const { messages } = body.parse(await req.json());
   const result = await chat(createAdminClient(), messages);
-  await logActivity(user.id, "chat", { tools: result.toolsUsed }, clientIp(req));
+  await logActivity(null, "chat", { tools: result.toolsUsed }, ip);
   return NextResponse.json(result);
 });

@@ -38,30 +38,6 @@ export function RunJobButton({ job, label, backfill }: { job: string; label: str
   );
 }
 
-export function UserControls({ id, role, active }: { id: string; role: string; active: boolean }) {
-  const router = useRouter();
-  const [err, setErr] = useState<string | null>(null);
-  const update = async (changes: Record<string, unknown>) => {
-    setErr(null);
-    try {
-      await call("/api/admin/users", "PATCH", { userId: id, ...changes });
-      router.refresh();
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : "error");
-    }
-  };
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <select className={input} value={role} onChange={(e) => update({ role: e.target.value })}>
-        <option value="user">Usuario</option>
-        <option value="admin">Administrador</option>
-      </select>
-      <button className={btn} onClick={() => update({ is_active: !active })}>{active ? "Desactivar" : "Activar"}</button>
-      {err && <span className="text-xs text-bad">{err}</span>}
-    </div>
-  );
-}
-
 export function SportToggle({ sportKey, enabled }: { sportKey: string; enabled: boolean }) {
   const router = useRouter();
   return (

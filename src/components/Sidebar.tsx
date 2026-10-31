@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
-  Activity, BarChart3, Bot, CircleDot, Gauge, History, Layers, LogOut, Menu, Shield, Trophy, X,
+  Activity, BarChart3, Bot, CircleDot, Gauge, History, Layers, Menu, Shield, Trophy, X,
 } from "lucide-react";
 
 type Item = { href: string; label: string; icon: React.ComponentType<{ className?: string }>; module?: string };
@@ -26,7 +26,7 @@ const SPORTS: Item[] = [
   { href: "/sports/tennis", label: "Tenis", icon: CircleDot },
 ];
 
-export function Sidebar({ isAdmin, email, modules, enabledSports }: { isAdmin: boolean; email: string; modules: Record<string, boolean>; enabledSports: string[] }) {
+export function Sidebar({ isAdmin, modules, enabledSports }: { isAdmin: boolean; modules: Record<string, boolean>; enabledSports: string[] }) {
   const path = usePathname();
   const [open, setOpen] = useState(false);
   const link = (i: Item) => {
@@ -65,14 +65,7 @@ export function Sidebar({ isAdmin, email, modules, enabledSports }: { isAdmin: b
           <div className="space-y-1">{[{ href: "/admin", label: "Panel admin", icon: Shield }, { href: "/admin/model", label: "Modelos", icon: BarChart3 }].map(link)}</div>
         </div>
       )}
-      <div className="mt-auto border-t border-line pt-4">
-        <div className="truncate px-3 text-xs text-muted">{email}</div>
-        <form action="/auth/signout" method="post">
-          <button className="mt-2 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-ink-2 hover:bg-surface-2">
-            <LogOut className="size-4 text-muted" /> Cerrar sesión
-          </button>
-        </form>
-      </div>
+      <p className="mt-auto border-t border-line px-3 pt-4 text-xs text-muted">+18 · Juego responsable</p>
     </nav>
   );
 

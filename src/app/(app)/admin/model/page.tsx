@@ -5,7 +5,7 @@ import { dateTime, pct, signedPct, units } from "@/lib/format";
 import { loadPredictions, summarize } from "@/lib/services/performance";
 import { getSettings } from "@/lib/services/settings";
 import { SPORT_KEYS, SPORTS } from "@/lib/sports";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +13,7 @@ type Backtest = { matchesEvaluated: number; model: { brier: number; logLoss: num
 
 export default async function ModelPage() {
   await requireAdminPage();
-  const db = await createClient();
+  const db = createAdminClient();
   const settings = await getSettings();
   const [{ data: runs }, { data: leagues }, rows] = await Promise.all([
     db.from("model_runs").select("id, sport_key, league_id, model_version, params, n_matches, metrics, fitted_at").order("fitted_at", { ascending: false }).limit(200),

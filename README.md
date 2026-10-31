@@ -10,14 +10,14 @@ Plataforma de inteligencia deportiva que combina datos reales (API-Sports, The O
 
 ```
                  ┌────────────── Vercel ──────────────────────────────────────┐
- Navegador ──►   │ proxy.ts (sesión Supabase + protección de rutas)            │
+ Navegador ──►   │ proxy.ts (redirige a /setup si falta configuración)         │
                  │ App Router (Server Components)  ──► servicios (server-only)│
                  │ Route Handlers /api/*  (zod + rate limit + logs)            │
                  │ Vercel Cron ──► /api/cron/[job] (Bearer CRON_SECRET)        │
                  └───────┬───────────────┬────────────────┬───────────────────┘
                          │               │                │
                  Supabase Postgres   API-Sports /     Claude API
-                 (Auth + RLS)        The Odds API     (explicación + chat con tools)
+                 (service role)      The Odds API     (explicación + chat con tools)
 ```
 
 Flujo de datos:
@@ -33,9 +33,8 @@ Las vistas (dashboard, value bets, partido, parlays) calculan **en vivo** con el
 
 ```
 supabase/migrations/0001_init.sql   Esquema, triggers de integridad, RLS, seeds
-src/proxy.ts                        Sesión + protección de rutas (Next 16 "proxy")
+src/proxy.ts                        Redirección a /setup sin configuración (Next 16 "proxy")
 src/app/
-  (auth)/login, signup              Autenticación (Supabase Auth)
   (app)/dashboard                   Dashboard principal con filtros deporte/liga/fecha
   (app)/sports/[sport]              Sección por deporte
   (app)/matches/[id]                Análisis completo + explicación con Claude
@@ -43,7 +42,7 @@ src/app/
   (app)/parlay                      Constructor de parlays con correlación
   (app)/history                     Historial, ROI, yield, win rate, CLV, calibración
   (app)/chat                        Asistente IA con herramientas de la plataforma
-  (app)/admin/*                     Panel admin (APIs, usuarios, ligas, ajustes, modelos, logs)
+  (app)/admin/*                     Panel admin (APIs, ligas, ajustes, modelos, logs)
   api/cron/[job]                    Jobs programados
   api/{chat,parlay,matches/[id]/analysis,admin/*}
   setup, legal                      Estado de configuración, aviso legal
@@ -60,7 +59,7 @@ src/lib/
   providers/    Clientes HTTP (timeout, reintentos, registro de consumo y cuota restante)
   services/     Sync, jobs, predicción/liquidación, análisis de partido, rendimiento, ajustes, rate limit, logs
   ai/           Claude: explicación de partidos y chat con tool use
-  supabase/     Clientes (usuario con RLS / service role solo en servidor)
+  supabase/     Cliente service role (solo en servidor)
 src/components/ UI (tarjetas, tablas, gráficos Recharts, formularios admin)
 ```
 
@@ -89,8 +88,8 @@ Variables (ver `.env.example`). Todas salvo las `NEXT_PUBLIC_*` son solo de serv
 
 | Variable | Uso |
 |---|---|
-| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Cliente con RLS |
-| `SUPABASE_SERVICE_ROLE_KEY` | Jobs y acciones admin |
+| `NEXT_PUBLIC_SUPABASE_URL` | URL del proyecto |
+| `SUPABASE_SERVICE_ROLE_KEY` | Acceso a datos desde el servidor (nunca llega al navegador) |
 | `API_SPORTS_KEY` | API-Football, Basketball (NBA), Baseball (MLB), American Football (NFL), Hockey (NHL) |
 | `ODDS_API_KEY` | Cuotas (h2h, totals, spreads) y resultados de tenis |
 | `ANTHROPIC_API_KEY`, `CLAUDE_MODEL` (opcional, por defecto `claude-opus-5-5`) | Explicaciones y chat |
@@ -99,11 +98,8 @@ Variables (ver `.env.example`). Todas salvo las `NEXT_PUBLIC_*` son solo de serv
 Pasos:
 
 1. Crear el proyecto en Supabase y ejecutar `supabase/migrations/0001_init.sql` (SQL editor o `supabase db push`).
-2. En Supabase Auth → URL Configuration, añadir `https://TU-DOMINIO/auth/callback` como redirect.
-3. Configurar las variables en Vercel e importar el repositorio. `vercel.json` define los cron (el plan Hobby solo permite cron diarios; usa Pro o lanza los procesos desde el panel admin).
-4. Registrarse y promover el primer administrador en el SQL editor:
-   `update public.profiles set role = 'admin' where email = 'tu@email.com';`
-5. Panel admin → revisar temporadas de cada liga → **Importar temporadas históricas** (añade antes temporadas en «Históricas») → **Sincronizar cuotas** → **Entrenar modelos y registrar predicciones**.
+2. Configurar las variables en Vercel e importar el repositorio. `vercel.json` define los cron (el plan Hobby solo permite cron diarios; usa Pro o lanza los procesos desde el panel admin).
+3. Abrir la app (entra directo, sin login) → Panel admin → revisar temporadas de cada liga → **Importar temporadas históricas** (añade antes temporadas en «Históricas») → **Sincronizar cuotas** → **Entrenar modelos y registrar predicciones**.
 
 Desarrollo local: `npm install`, `cp .env.example .env.local`, `npm run dev`. Tests: `npm test`. Tipos: `npm run typecheck`.
 
@@ -124,9 +120,11 @@ Desarrollo local: `npm install`, `cp .env.example .env.local`, `npm run dev`. Te
 - Chat: bucle de tool use sobre herramientas de la plataforma (`list_matches`, `get_value_bets`, `analyze_match`, `compare_odds`, `model_performance`, `soccer_player_stats`); si una herramienta no devuelve datos, el asistente lo dice.
 - Pensamiento adaptativo, `effort` medio (análisis) / bajo (chat) y fallback de rechazo del lado del servidor (`fallbacks: "default"`).
 
-## 7. Seguridad
+## 7. Acceso y seguridad
 
-Sesión Supabase validada en `proxy.ts` y de nuevo en cada página/handler (`requireUser`, `assertAdmin`); roles admin/usuario; validación con zod; rate limiting en Postgres (funciona entre instancias serverless); claves solo en servidor (`server-only`), redacción de claves en los logs de consumo; cabeceras de seguridad (HSTS, X-Frame-Options, nosniff…); errores sin detalles internos al cliente; registro de actividad y errores; RLS en todas las tablas.
+**Sin login**: la app abre directamente en el dashboard y cualquier visitante tiene acceso completo, incluido el panel de administración (ejecutar procesos, cambiar ajustes). Si despliegas en una URL pública, protégela a nivel de hosting, por ejemplo con **Vercel Deployment Protection** (contraseña o acceso solo para tu cuenta de Vercel); si no, cualquiera con la URL podría consumir tus cuotas de API y de Claude.
+
+Se mantienen: claves solo en servidor (`server-only`) y redactadas en los logs, rate limiting por IP en Postgres (chat, análisis IA, parlays, procesos manuales), validación con zod, cabeceras de seguridad, errores sin detalles internos, registro de actividad y errores, y RLS activado (sin sesión, el navegador no puede leer la base de datos; el servidor usa la service role). El cron sigue protegido con `CRON_SECRET`. Las tablas `profiles`/roles del esquema quedan sin uso, por si en el futuro se reactiva la autenticación.
 
 ## 8. Limitaciones conocidas del MVP
 

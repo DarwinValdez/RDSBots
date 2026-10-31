@@ -31,7 +31,7 @@ export type ProviderStatus = {
 
 export function providerStatus(): ProviderStatus {
   return {
-    supabase: !!(serverEnv.supabaseUrl() && serverEnv.supabaseAnonKey()),
+    supabase: !!serverEnv.supabaseUrl(),
     supabaseService: !!serverEnv.supabaseServiceKey(),
     apiSports: !!serverEnv.apiSportsKey(),
     oddsApi: !!serverEnv.oddsApiKey(),

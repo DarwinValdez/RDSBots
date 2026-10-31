@@ -8,7 +8,7 @@ import { filterOptions, parseId, parseSport } from "@/lib/filters";
 import { pct } from "@/lib/format";
 import { getSettings } from "@/lib/services/settings";
 import { extractValueBets, priceUpcoming } from "@/lib/services/valueBets";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const metadata = { title: "Value Bets" };
 export const dynamic = "force-dynamic";
@@ -17,7 +17,7 @@ export default async function ValueBetsPage({ searchParams }: { searchParams: Pr
   const sp = await searchParams;
   const settings = await getSettings();
   if (!settings.modules.value_bets) return <ModuleDisabled name="Value Bets" />;
-  const db = await createClient();
+  const db = createAdminClient();
   const { from, to } = dateWindow(sp.range, sp.date);
   const [options, priced] = await Promise.all([
     filterOptions(db),

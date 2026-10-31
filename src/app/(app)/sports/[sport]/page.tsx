@@ -8,7 +8,7 @@ import { filterOptions, parseId } from "@/lib/filters";
 import { getSettings } from "@/lib/services/settings";
 import { priceUpcoming } from "@/lib/services/valueBets";
 import { isSportKey, SPORTS } from "@/lib/sports";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { date } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +29,7 @@ export default async function SportPage({ params, searchParams }: { params: Prom
   const { sport } = await params;
   if (!isSportKey(sport)) notFound();
   const sp = await searchParams;
-  const db = await createClient();
+  const db = createAdminClient();
   const settings = await getSettings();
   const { from, to } = dateWindow(sp.range, sp.date);
   const [options, priced] = await Promise.all([

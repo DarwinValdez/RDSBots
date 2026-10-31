@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { assertUser, HttpError } from "@/lib/auth";
+import { HttpError } from "@/lib/auth";
 import { handler } from "@/lib/api";
 import { evaluateParlay, type ParlayLeg } from "@/lib/model/parlay";
 import type { ScoreGrid } from "@/lib/model/grid";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { MATCH_SELECT, loadLatestOdds, priceMatch, type MatchRow } from "@/lib/services/matchAnalysis";
 import { latestModelRun } from "@/lib/services/modelRuns";
-import { enforceRateLimit } from "@/lib/services/rateLimit";
+import { clientIp, enforceRateLimit } from "@/lib/services/rateLimit";
 import { getSettings } from "@/lib/services/settings";
 
 export const runtime = "nodejs";
@@ -27,10 +27,9 @@ const body = z.object({
 });
 
 export const POST = handler("api:parlay", async (req: Request) => {
-  const user = await assertUser();
   const settings = await getSettings();
   if (!settings.modules.parlays) throw new HttpError(403, "El constructor de parlays está desactivado");
-  await enforceRateLimit(`parlay:${user.id}`, 120, 3600);
+  await enforceRateLimit(`parlay:${clientIp(req) ?? "unknown"}`, 120, 3600);
   const { legs } = body.parse(await req.json());
 
   const db = createAdminClient();

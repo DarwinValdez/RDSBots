@@ -36,7 +36,7 @@ export default function LegalPage() {
           (Anthropic) a partir de esos datos. Tratamos tu email y actividad únicamente para prestar el servicio y por seguridad.
         </p>
       </section>
-      <Link href="/login" className="text-info underline">Volver</Link>
+      <Link href="/dashboard" className="text-info underline">Volver</Link>
     </main>
   );
 }

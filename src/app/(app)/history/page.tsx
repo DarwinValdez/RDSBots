@@ -8,7 +8,7 @@ import { betLabel, MARKET_LABELS, type Market } from "@/lib/model/markets";
 import { loadPredictions, summarize } from "@/lib/services/performance";
 import { getSettings } from "@/lib/services/settings";
 import { SPORTS, isSportKey } from "@/lib/sports";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const metadata = { title: "Historial y rendimiento" };
 export const dynamic = "force-dynamic";
@@ -17,7 +17,7 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
   const sp = await searchParams;
   const settings = await getSettings();
   if (!settings.modules.history) return <ModuleDisabled name="Historial" />;
-  const db = await createClient();
+  const db = createAdminClient();
   const sport = parseSport(sp.sport);
   const onlyValue = sp.scope !== "all";
   const days = Number(sp.period) > 0 ? Number(sp.period) : 365;

@@ -3,7 +3,6 @@ import { requireAdminPage } from "@/lib/auth";
 
 const TABS = [
   ["/admin", "Resumen y APIs"],
-  ["/admin/users", "Usuarios"],
   ["/admin/leagues", "Deportes y ligas"],
   ["/admin/settings", "Configuración"],
   ["/admin/model", "Modelos y rendimiento"],
