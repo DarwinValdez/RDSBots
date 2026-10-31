@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0a0b0d;
+  --color-surface: #111214;
+  --color-surface-2: #17191c;
+  --color-surface-3: #1e2125;
+  --color-line: #262a30;
+  --color-ink: #e8eaed;
+  --color-ink-2: #b4bac2;
+  --color-muted: #7d848d;
+  --color-brand: #22c55e;
+  --color-brand-2: #16a34a;
+  --color-info: #3b82f6;
+  --color-warn: #f59e0b;
+  --color-bad: #ef4444;
+  --color-chart-1: #3987e5;
+  --color-chart-2: #199e70;
+  --color-chart-neg: #e66767;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Markdown output from the AI analyst */
+.prose-ai h1,
+.prose-ai h2,
+.prose-ai h3 {
+  font-weight: 600;
+  margin: 0.9rem 0 0.4rem;
+  color: var(--color-ink);
+}
+.prose-ai p {
+  margin: 0.4rem 0;
+  color: var(--color-ink-2);
+  line-height: 1.6;
+}
+.prose-ai ul,
+.prose-ai ol {
+  margin: 0.4rem 0 0.4rem 1.2rem;
+  color: var(--color-ink-2);
+}
+.prose-ai ul {
+  list-style: disc;
+}
+.prose-ai ol {
+  list-style: decimal;
+}
+.prose-ai li {
+  margin: 0.15rem 0;
+}
+.prose-ai strong {
+  color: var(--color-ink);
+}
+.prose-ai code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: var(--color-surface-3);
+  padding: 0 0.25rem;
+  border-radius: 4px;
+}

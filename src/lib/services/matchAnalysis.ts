@@ -5,7 +5,7 @@ import { gridSummary } from "@/lib/model/grid";
 import { tieShareHome } from "@/lib/model/markets";
 import type { Market } from "@/lib/model/markets";
 import { SPORTS, type SportKey } from "@/lib/sports";
-import { gridForMatch, latestModelRun, type ModelRun } from "./modelRuns";
+import { fetchAll, gridForMatch, latestModelRun, type ModelRun } from "./modelRuns";
 import type { Settings } from "./settings";
 
 export type MatchRow = {
@@ -120,13 +120,14 @@ function teamFeatures(rows: ResultRow[], teamId: number, side: "home" | "away", 
 
 export async function loadLatestOdds(db: SupabaseClient, matchIds: number[]): Promise<Map<number, OddsRow[]>> {
   const out = new Map<number, OddsRow[]>();
-  for (let i = 0; i < matchIds.length; i += 100) {
-    const { data } = await db
-      .from("latest_odds")
-      .select("match_id, bookmaker, market, selection, line, price")
-      .in("match_id", matchIds.slice(i, i + 100))
-      .limit(10000);
-    for (const r of data ?? []) {
+  type Row = { match_id: number; bookmaker: string; market: OddsRow["market"]; selection: OddsRow["selection"]; line: number | null; price: number };
+  // PostgREST caps responses (1000 rows on Supabase): small id chunks + paging
+  for (let i = 0; i < matchIds.length; i += 20) {
+    const chunk = matchIds.slice(i, i + 20);
+    const rows = await fetchAll<Row>((from, to) =>
+      db.from("latest_odds").select("match_id, bookmaker, market, selection, line, price").in("match_id", chunk).order("id").range(from, to),
+    );
+    for (const r of rows) {
       const list = out.get(r.match_id) ?? [];
       list.push({ bookmaker: r.bookmaker, market: r.market, selection: r.selection, line: r.line == null ? null : Number(r.line), price: Number(r.price) });
       out.set(r.match_id, list);
@@ -177,12 +178,14 @@ export async function analyzeMatch(db: SupabaseClient, matchId: number, settings
     loadLatestOdds(db, [match.id]),
     teamResults(db, match.home_team_id, match.commence_time),
     teamResults(db, match.away_team_id, match.commence_time),
-    db
-      .from("odds_snapshots")
-      .select("market, selection, line, price, captured_at")
-      .eq("match_id", match.id)
-      .order("captured_at", { ascending: true })
-      .limit(5000),
+    fetchAll<{ market: Market; selection: string; line: number | null; price: number; captured_at: string }>((from, to) =>
+      db
+        .from("odds_snapshots")
+        .select("market, selection, line, price, captured_at")
+        .eq("match_id", match.id)
+        .order("captured_at", { ascending: true })
+        .range(from, to),
+    ),
   ]);
   const odds = oddsMap.get(match.id) ?? [];
   const priced = priceMatch(match, run, odds, settings);
@@ -199,7 +202,7 @@ export async function analyzeMatch(db: SupabaseClient, matchId: number, settings
 
   // line movement: best price per selection, first vs latest snapshot window
   const movement: MatchAnalysis["lineMovement"] = [];
-  const snaps = (history.data ?? []) as { market: Market; selection: string; line: number | null; price: number; captured_at: string }[];
+  const snaps = history;
   const mainSel = priced.selections.filter((s) => s.isMainLine && s.bestPrice != null);
   for (const s of mainSel) {
     const rows = snaps.filter((r) => r.market === s.market && r.selection === s.selection && (r.line == null ? null : Number(r.line)) === s.line);

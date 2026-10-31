@@ -348,6 +348,7 @@ begin
 end;
 $$;
 revoke all on function public.check_rate_limit(text, int, int) from public, anon, authenticated;
+grant execute on function public.check_rate_limit(text, int, int) to service_role;
 
 -- ---------------------------------------------------------------------
 -- Row Level Security

@@ -5,6 +5,7 @@ import { fetchOdds, fetchScores, listSports, type OddsEvent } from "@/lib/provid
 import { isSportKey, SPORTS, type SportKey } from "@/lib/sports";
 import type { Market, Selection } from "@/lib/model/markets";
 import { logError } from "./logging";
+import { loadLatestOdds } from "./matchAnalysis";
 import { getSettings } from "./settings";
 import { TeamDirectory, type TeamRow } from "./teams";
 
@@ -155,9 +156,8 @@ export async function syncOdds(db: SupabaseClient) {
       // only store prices that changed since the latest stored snapshot
       const ids = Array.from(new Set(snapshots.map((s) => s.match_id)));
       const latest = new Map<string, number>();
-      for (let i = 0; i < ids.length; i += 100) {
-        const { data } = await db.from("latest_odds").select("match_id, bookmaker, market, selection, line, price").in("match_id", ids.slice(i, i + 100));
-        for (const r of data ?? []) latest.set(lineKey(r), Number(r.price));
+      for (const [matchId, rows] of await loadLatestOdds(db, ids)) {
+        for (const r of rows) latest.set(lineKey({ match_id: matchId, ...r }), r.price);
       }
       const changed = snapshots.filter((s) => latest.get(lineKey(s)) !== s.price);
       for (let i = 0; i < changed.length; i += 1000) {
