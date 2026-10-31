@@ -40,9 +40,6 @@ export async function proxy(request: NextRequest) {
     redirect.searchParams.set("next", path);
     return NextResponse.redirect(redirect);
   }
-  if (user && (path === "/login" || path === "/signup")) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
   return response;
 }
 

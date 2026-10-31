@@ -2,6 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { fetchSeasonFixtures } from "@/lib/providers/apiSports";
 import { fetchOdds, fetchScores, listSports, type OddsEvent } from "@/lib/providers/oddsApi";
+import { serverEnv } from "@/lib/env";
 import { isSportKey, SPORTS, type SportKey } from "@/lib/sports";
 import type { Market, Selection } from "@/lib/model/markets";
 import { logError } from "./logging";
@@ -20,6 +21,11 @@ export type LeagueRow = {
   enabled: boolean;
 };
 
+/** League whose fixtures/results come from API-Sports (otherwise the odds feed is the fixture source). */
+export function usesStatsProvider(l: LeagueRow): boolean {
+  return l.provider_league_id != null && !!SPORTS[l.sport_key].apiSportsHost && !!serverEnv.apiSportsKey();
+}
+
 export async function enabledLeagues(db: SupabaseClient): Promise<LeagueRow[]> {
   const [{ data: leagues }, { data: sports }] = await Promise.all([
     db.from("leagues").select("*").eq("enabled", true),
@@ -31,7 +37,8 @@ export async function enabledLeagues(db: SupabaseClient): Promise<LeagueRow[]> {
 
 /** Pulls fixtures + results for each enabled league from API-Sports. */
 export async function syncFixtures(db: SupabaseClient, opts: { backfill?: boolean } = {}) {
-  const leagues = (await enabledLeagues(db)).filter((l) => l.provider_league_id != null && SPORTS[l.sport_key].apiSportsHost);
+  if (!serverEnv.apiSportsKey()) return { skipped: "API_SPORTS_KEY no configurada" };
+  const leagues = (await enabledLeagues(db)).filter(usesStatsProvider);
   const summary: Record<string, number | string> = {};
   const dirs = new Map<SportKey, TeamDirectory>();
   for (const league of leagues) {
@@ -128,6 +135,7 @@ const lineKey = (r: { match_id: number; bookmaker: string; market: string; selec
 
 /** Pulls current odds, links events to fixtures, stores changed prices. */
 export async function syncOdds(db: SupabaseClient) {
+  if (!serverEnv.oddsApiKey()) return { skipped: "ODDS_API_KEY no configurada" };
   const settings = await getSettings();
   try {
     await discoverTennis(db);
@@ -192,7 +200,7 @@ async function linkEvents(db: SupabaseClient, dir: TeamDirectory, league: League
     .gte("commence_time", from)
     .lte("commence_time", to);
 
-  const hasStatsProvider = league.provider_league_id != null && SPORTS[league.sport_key].apiSportsHost;
+  const hasStatsProvider = usesStatsProvider(league);
 
   for (const ev of pending) {
     const t = new Date(ev.commence_time).getTime();
@@ -240,7 +248,8 @@ async function linkEvents(db: SupabaseClient, dir: TeamDirectory, league: League
 
 /** Results for odds-only competitions (no stats provider) via The Odds API. */
 export async function syncOddsOnlyScores(db: SupabaseClient) {
-  const leagues = (await enabledLeagues(db)).filter((l) => l.odds_sport_key && (l.provider_league_id == null || !SPORTS[l.sport_key].apiSportsHost));
+  if (!serverEnv.oddsApiKey()) return { skipped: "ODDS_API_KEY no configurada" };
+  const leagues = (await enabledLeagues(db)).filter((l) => l.odds_sport_key && !usesStatsProvider(l));
   const summary: Record<string, number | string> = {};
   for (const league of leagues) {
     try {

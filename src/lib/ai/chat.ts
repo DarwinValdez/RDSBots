@@ -25,7 +25,7 @@ const TOOLS: Tool[] = [
       type: "object",
       additionalProperties: false,
       properties: {
-        sport: { type: ["string", "null"], enum: [...sportEnum, null], description: "Deporte o null para todos" },
+        sport: { type: ["string", "null"], description: `Uno de ${sportEnum.join(", ")}, o null para todos` },
         days_ahead: { type: "integer", description: "Días hacia adelante (1-7)" },
         team: { type: ["string", "null"], description: "Filtrar por nombre de equipo/jugador, o null" },
       },
@@ -39,7 +39,7 @@ const TOOLS: Tool[] = [
     input_schema: {
       type: "object",
       additionalProperties: false,
-      properties: { sport: { type: ["string", "null"], enum: [...sportEnum, null] } },
+      properties: { sport: { type: ["string", "null"], description: `Uno de ${sportEnum.join(", ")}, o null para todos` } },
       required: ["sport"],
     },
   },
@@ -72,7 +72,7 @@ const TOOLS: Tool[] = [
     input_schema: {
       type: "object",
       additionalProperties: false,
-      properties: { sport: { type: ["string", "null"], enum: [...sportEnum, null] }, only_value_bets: { type: "boolean" } },
+      properties: { sport: { type: ["string", "null"], description: `Uno de ${sportEnum.join(", ")}, o null para todos` }, only_value_bets: { type: "boolean" } },
       required: ["sport", "only_value_bets"],
     },
   },

@@ -13,7 +13,9 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const [password, setPassword] = useState("");
   const [age, setAge] = useState(false);
   const [terms, setTerms] = useState(false);
-  const [error, setError] = useState<string | null>(params.get("error") ? "No se pudo completar la autenticación." : null);
+  const [error, setError] = useState<string | null>(
+    params.get("error") === "session" ? null : params.get("error") ? "No se pudo completar la autenticación." : null,
+  );
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 

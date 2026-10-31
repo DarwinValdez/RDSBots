@@ -28,7 +28,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
 /** For Server Components / pages. */
 export async function requireUser(): Promise<SessionUser> {
   const user = await getSessionUser();
-  if (!user) redirect("/login");
+  if (!user) redirect("/login?error=session");
   return user;
 }
 
